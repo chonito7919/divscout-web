@@ -53,8 +53,8 @@ public_html/
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/divscout-web.git
-cd divscout-web
+git clone https://github.com/chonito7919/DivScoutApp.git
+cd DivScoutApp/public_html
 ```
 
 2. **Set up Python virtual environment**
@@ -175,6 +175,37 @@ Apache 2.0 - See [LICENSE](https://github.com/chonito7919/DivScout/blob/main/LIC
 ## Disclaimer
 
 **This is not financial advice.** All dividend data should be independently verified before making investment decisions. Historical dividend payments do not guarantee future payments.
+
+## Data Pipeline
+
+### DivScout Parser
+
+The dividend data displayed in this web interface is extracted from SEC EDGAR filings using the [DivScout Parser](https://github.com/chonito7919/DivScout), a Python tool that:
+
+- **Fetches data** from SEC CompanyFacts API (official XBRL JSON format)
+- **Parses standardized tags** from financial statements to identify dividend events
+- **Applies quality checks** including statistical analysis and outlier detection
+- **Generates confidence scores** for each dividend entry (only >= 0.8 displayed)
+- **Stores structured data** in PostgreSQL for this web interface to query
+
+**Parser Usage:**
+```bash
+# Install the parser
+git clone https://github.com/chonito7919/DivScout.git
+cd DivScout
+pip install -r requirements.txt
+
+# Process companies
+python main.py AAPL MSFT JNJ
+```
+
+**Parser Dependencies:**
+- Python 3.8+
+- requests, psycopg2-binary, python-dotenv
+- PostgreSQL database
+- SEC API access (free, no authentication required)
+
+See the [DivScout repository](https://github.com/chonito7919/DivScout) for full parser documentation, contributing guidelines, and license information.
 
 ## Related
 

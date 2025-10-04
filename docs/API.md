@@ -5,7 +5,7 @@ RESTful API for accessing dividend data from SEC XBRL filings.
 ## Base URL
 
 ```
-https://yourdomain.com/api
+https://divscout.app/api
 ```
 
 ## Response Format
@@ -49,6 +49,8 @@ Responses include cache headers:
 Check if API is online and responding.
 
 **Endpoint:** `GET /api/`
+
+**Example:** `https://divscout.app/api/`
 
 **Response:**
 ```json
@@ -327,7 +329,7 @@ import requests
 
 def get_recent_dividends(limit=20):
     response = requests.get(
-        'https://yourdomain.com/api/dividends/recent',
+        'https://divscout.app/api/dividends/recent',
         params={'limit': limit}
     )
     
@@ -342,13 +344,13 @@ def get_recent_dividends(limit=20):
 ### cURL
 ```bash
 # Get company details
-curl https://yourdomain.com/api/companies/AAPL
+curl https://divscout.app/api/companies/AAPL
 
 # Get recent dividends
-curl "https://yourdomain.com/api/dividends/recent?limit=10"
+curl "https://divscout.app/api/dividends/recent?limit=10"
 
 # Get calendar range
-curl "https://yourdomain.com/api/dividends/calendar?start_date=2024-10-01&end_date=2024-10-31"
+curl "https://divscout.app/api/dividends/calendar?start_date=2024-10-01&end_date=2024-10-31"
 ```
 
 ---

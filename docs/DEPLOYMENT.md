@@ -13,8 +13,8 @@ This guide covers deploying DivScout to Namecheap Stellar hosting with Python su
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/divscout-web.git
-   cd divscout-web
+   git clone https://github.com/chonito7919/DivScoutApp.git
+   cd DivScoutApp/public_html
    ```
 
 2. **Create your .env file**
@@ -142,13 +142,13 @@ This guide covers deploying DivScout to Namecheap Stellar hosting with Python su
 
 1. **Test API directly:**
    ```
-   https://yourdomain.com/api/
+   https://divscout.app/api/
    ```
    Should return: `{"status": "online", "service": "DivScout API", ...}`
 
 2. **Test main site:**
    ```
-   https://yourdomain.com/
+   https://divscout.app/
    ```
    Should load the dashboard
 
