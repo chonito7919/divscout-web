@@ -545,33 +545,62 @@ async function loadCalendar()
 }
 
 // Navigation
-function switchPage(pageName) 
+function switchPage(pageName, updateHash = true)
 {
     // Hide all pages
     document.querySelectorAll('.page').forEach(page => {
         page.classList.remove('active');
     });
-    
+
     // Remove active from all nav links
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
     });
-    
+
     // Show selected page
     document.getElementById(`${pageName}-page`).classList.add('active');
-    
+
     // Activate nav link
-    document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
-    
+    const navLink = document.querySelector(`[data-page="${pageName}"]`);
+    if (navLink) {
+        navLink.classList.add('active');
+    }
+
+    // Update URL hash
+    if (updateHash) {
+        window.location.hash = pageName;
+    }
+
     // Load page data if needed
-    if (pageName === 'companies' && allCompanies.length === 0) 
+    if (pageName === 'companies' && allCompanies.length === 0)
     {
         loadCompanies();
     }
 }
 
+// Handle hash changes (back/forward navigation)
+function handleHashChange()
+{
+    const hash = window.location.hash.slice(1); // Remove the #
+    const validPages = ['dashboard', 'companies', 'calendar'];
+    const page = validPages.includes(hash) ? hash : 'dashboard';
+    switchPage(page, false); // Don't update hash when responding to hash change
+}
+
+// Load page from URL on initial load
+function loadPageFromURL()
+{
+    handleHashChange();
+}
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
+    // Load page from URL hash on initial load
+    loadPageFromURL();
+
+    // Listen for hash changes (back/forward buttons)
+    window.addEventListener('hashchange', handleHashChange);
+
     // Navigation
     document.querySelectorAll('.nav-link').forEach(link => {
         link.addEventListener('click', (e) => {
@@ -611,7 +640,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Load initial dashboard data
-    loadStats();
-    loadRecentDividends();
+    // Load initial dashboard data (only if on dashboard)
+    if (!window.location.hash || window.location.hash === '#dashboard') {
+        loadStats();
+        loadRecentDividends();
+    }
 });
