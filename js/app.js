@@ -532,46 +532,50 @@ function closeModal()
 }
 
 // Calendar Functions
-async function loadCalendar() 
+async function loadCalendar()
 {
     const startDate = document.getElementById('calendar-start').value;
     const endDate = document.getElementById('calendar-end').value;
-    
-    if (!startDate || !endDate) 
+
+    if (!startDate || !endDate)
     {
+        showError('Please select both start and end dates');
         return;
     }
-    
+
     const container = document.getElementById('calendar-view');
     container.innerHTML = '<div class="loading">Loading calendar data...</div>';
-    
-    try 
+
+    try
     {
         // Use the new calendar endpoint
+        console.log(`Loading calendar: ${startDate} to ${endDate}`);
         const data = await apiCall(`/dividends/calendar?start_date=${startDate}&end_date=${endDate}`);
-        
-        if (data.success) 
+
+        console.log('Calendar data received:', data);
+
+        if (data.success)
         {
-            if (data.data.length === 0) 
+            if (!data.data || data.data.length === 0)
             {
-                container.innerHTML = '<p class="calendar-hint">No dividends found in selected date range.</p>';
+                container.innerHTML = `<p class="calendar-hint">No dividends found between ${formatDate(startDate)} and ${formatDate(endDate)}. Try selecting a different date range.</p>`;
                 return;
             }
-            
+
             // Group by payment date
             const grouped = {};
             data.data.forEach(div => {
                 const date = div.payment_date;
-                if (!grouped[date]) 
+                if (!grouped[date])
                 {
                     grouped[date] = [];
                 }
                 grouped[date].push(div);
             });
-            
+
             // Sort dates
             const sortedDates = Object.keys(grouped).sort();
-            
+
             const html = `
                 <div class="calendar-grid">
                     ${sortedDates.map(date => `
@@ -592,9 +596,9 @@ async function loadCalendar()
                     `).join('')}
                 </div>
             `;
-            
+
             container.innerHTML = html;
-            
+
             // Add click handlers
             container.querySelectorAll('.ticker-link').forEach(link => {
                 link.addEventListener('click', (e) => {
@@ -603,11 +607,16 @@ async function loadCalendar()
                 });
             });
         }
-    } 
-    catch (error) 
+        else
+        {
+            container.innerHTML = `<p class="calendar-hint">Error: ${data.error || 'Unknown error occurred'}</p>`;
+        }
+    }
+    catch (error)
     {
+        console.error('Calendar error:', error);
         showError('Failed to load calendar: ' + error.message);
-        container.innerHTML = '<p class="calendar-hint">Failed to load calendar data.</p>';
+        container.innerHTML = `<p class="calendar-hint">Failed to load calendar data. Error: ${error.message}</p>`;
     }
 }
 
