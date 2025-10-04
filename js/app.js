@@ -126,103 +126,170 @@ function getFrequencyBadgeClass(frequency)
 }
 
 // Dashboard Functions
-async function loadStats() 
+let currentPage = 1;
+let currentLimit = 20;
+let allDividendsData = [];
+
+async function loadStats()
 {
-    try 
+    try
     {
         const data = await apiCall('/stats');
-        
-        if (data.success) 
+
+        if (data.success)
         {
             const stats = data.data;
             const statCards = document.querySelectorAll('.stat-card');
-            
+
             statCards[0].classList.remove('loading');
             statCards[0].querySelector('.stat-value').textContent = stats.total_companies.toLocaleString();
-            
+
             statCards[1].classList.remove('loading');
             statCards[1].querySelector('.stat-value').textContent = stats.total_dividends.toLocaleString();
-            
+
             statCards[2].classList.remove('loading');
             statCards[2].querySelector('.stat-value').textContent = stats.companies_with_dividends.toLocaleString();
         }
-    } 
-    catch (error) 
+    }
+    catch (error)
     {
         showError('Failed to load statistics: ' + error.message);
     }
 }
 
-async function loadRecentDividends(limit = 20) 
+async function loadRecentDividends(limit = 20, page = 1)
 {
     const container = document.getElementById('recent-dividends');
     container.classList.add('loading');
-    
-    try 
+
+    currentLimit = limit;
+    currentPage = page;
+
+    try
     {
-        const data = await apiCall(`/dividends/recent?limit=${limit}`);
-        
-        if (data.success && data.data.length > 0) 
+        // Load more data than needed for pagination (100 records max from API)
+        const data = await apiCall(`/dividends/recent?limit=100`);
+
+        if (data.success && data.data.length > 0)
         {
-            const html = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Ticker</th>
-                            <th>Company</th>
-                            <th>Ex-Dividend Date</th>
-                            <th>Payment Date</th>
-                            <th>Amount</th>
-                            <th>Frequency</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${data.data.map(div => `
-                            <tr>
-                                <td>
-                                    <a href="#" class="ticker-link" data-ticker="${div.ticker}">
-                                        ${div.ticker}
-                                    </a>
-                                </td>
-                                <td>${div.company_name}</td>
-                                <td>${formatDate(div.ex_dividend_date)}</td>
-                                <td>${formatDate(div.payment_date)}</td>
-                                <td class="amount">${formatCurrency(div.amount)}</td>
-                                <td>
-                                    <span class="badge ${getFrequencyBadgeClass(div.frequency)}">
-                                        ${div.frequency || 'N/A'}
-                                    </span>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            
-            container.innerHTML = html;
-            
-            // Add click handlers to ticker links
-            container.querySelectorAll('.ticker-link').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    showCompanyModal(e.target.dataset.ticker);
-                });
-            });
-        } 
-        else 
+            allDividendsData = data.data;
+            displayDividendsPage(page, limit);
+        }
+        else
         {
             container.innerHTML = '<p class="calendar-hint">No recent dividends found.</p>';
         }
-    } 
-    catch (error) 
+    }
+    catch (error)
     {
         showError('Failed to load recent dividends: ' + error.message);
         container.innerHTML = '<p class="calendar-hint">Failed to load data.</p>';
-    } 
-    finally 
+    }
+    finally
     {
         container.classList.remove('loading');
     }
+}
+
+function displayDividendsPage(page, limit) {
+    const container = document.getElementById('recent-dividends');
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const pageData = allDividendsData.slice(start, end);
+    const totalPages = Math.ceil(allDividendsData.length / limit);
+
+    if (pageData.length === 0) {
+        container.innerHTML = '<p class="calendar-hint">No dividends on this page.</p>';
+        return;
+    }
+
+    const html = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Ticker</th>
+                    <th>Company</th>
+                    <th>Ex-Dividend Date</th>
+                    <th>Payment Date</th>
+                    <th>Amount</th>
+                    <th>Frequency</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${pageData.map(div => `
+                    <tr>
+                        <td>
+                            <a href="#" class="ticker-link" data-ticker="${div.ticker}">
+                                ${div.ticker}
+                            </a>
+                        </td>
+                        <td>${div.company_name}</td>
+                        <td>${formatDate(div.ex_dividend_date)}</td>
+                        <td>${formatDate(div.payment_date)}</td>
+                        <td class="amount">${formatCurrency(div.amount)}</td>
+                        <td>
+                            <span class="badge ${getFrequencyBadgeClass(div.frequency)}">
+                                ${div.frequency || 'N/A'}
+                            </span>
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+
+    container.innerHTML = html;
+
+    // Add click handlers to ticker links
+    container.querySelectorAll('.ticker-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            showCompanyModal(e.target.dataset.ticker);
+        });
+    });
+
+    // Update pagination controls
+    updatePaginationControls(page, totalPages, allDividendsData.length);
+}
+
+function updatePaginationControls(currentPage, totalPages, totalRecords) {
+    const paginationContainer = document.getElementById('pagination-controls');
+
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    const start = (currentPage - 1) * currentLimit + 1;
+    const end = Math.min(currentPage * currentLimit, totalRecords);
+
+    let html = `
+        <div class="pagination">
+            <button
+                class="btn btn-secondary"
+                onclick="changePage(${currentPage - 1})"
+                ${currentPage === 1 ? 'disabled' : ''}
+            >
+                ← Previous
+            </button>
+            <span class="pagination-info">
+                Showing ${start}-${end} of ${totalRecords} | Page ${currentPage} of ${totalPages}
+            </span>
+            <button
+                class="btn btn-secondary"
+                onclick="changePage(${currentPage + 1})"
+                ${currentPage === totalPages ? 'disabled' : ''}
+            >
+                Next →
+            </button>
+        </div>
+    `;
+
+    paginationContainer.innerHTML = html;
+}
+
+function changePage(page) {
+    displayDividendsPage(page, currentLimit);
 }
 
 // Companies Page Functions
@@ -572,8 +639,10 @@ function switchPage(pageName, updateHash = true)
     }
 
     // Load page data if needed
-    if (pageName === 'companies' && allCompanies.length === 0)
-    {
+    if (pageName === 'dashboard') {
+        loadStats();
+        loadRecentDividends();
+    } else if (pageName === 'companies' && allCompanies.length === 0) {
         loadCompanies();
     }
 }
@@ -612,7 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Recent dividends limit selector
     document.getElementById('recent-limit').addEventListener('change', (e) => {
-        loadRecentDividends(parseInt(e.target.value));
+        loadRecentDividends(parseInt(e.target.value), 1);
     });
     
     // Company search and filters
