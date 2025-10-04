@@ -1,0 +1,98 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Environment variables - CRITICAL: Never commit these
+.env
+*.env
+.env.*
+!.env.example
+
+# SSL Certificates - Contains sensitive connection info
+*.crt
+*.pem
+*.key
+ca-certificate.crt
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+
+# Logs
+*.log
+api/app_debug.log
+api/stderr.log
+api/error_log
+error_log
+access_log
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*~
+
+# Cache
+.cache/
+*.cache
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation build
+docs/_build/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Namecheap/cPanel specific
+.htpasswd
+.cpanel/
+.softaculous/
+api/tmp/
+stderr.log
+error_log
+
+# Local development
+local_settings.py
+dev.py
+test_*.py
+
+# Backup files
+*.backup
+*.old
+backup/
