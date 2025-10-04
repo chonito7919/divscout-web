@@ -434,7 +434,7 @@ def get_dividend_calendar():
         conn = get_db_connection()
         
         result = conn.run("""
-            SELECT 
+            SELECT
                 c.ticker,
                 c.company_name,
                 de.ex_dividend_date,
@@ -445,8 +445,8 @@ def get_dividend_calendar():
             FROM dividend_events de
             JOIN companies c ON de.company_id = c.company_id
             WHERE c.is_active = true
-                AND de.payment_date >= :start_date::date
-                AND de.payment_date <= :end_date::date
+                AND de.ex_dividend_date >= :start_date::date
+                AND de.ex_dividend_date <= :end_date::date
                 AND de.confidence >= 0.8
                 AND (de.review_status != 'deleted' OR de.review_status IS NULL)
             ORDER BY de.payment_date ASC

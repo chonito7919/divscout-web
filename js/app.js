@@ -562,10 +562,10 @@ async function loadCalendar()
                 return;
             }
 
-            // Group by payment date
+            // Group by ex-dividend date
             const grouped = {};
             data.data.forEach(div => {
-                const date = div.payment_date;
+                const date = div.ex_dividend_date;
                 if (!grouped[date])
                 {
                     grouped[date] = [];
@@ -580,7 +580,10 @@ async function loadCalendar()
                 <div class="calendar-grid">
                     ${sortedDates.map(date => `
                         <div class="calendar-day">
-                            <div class="calendar-date">${formatDate(date)}</div>
+                            <div class="calendar-date">
+                                ${formatDate(date)}
+                                <span style="font-size: 0.75rem; color: var(--text-tertiary); font-weight: normal;"> (Ex-Div)</span>
+                            </div>
                             ${grouped[date].map(div => `
                                 <div class="calendar-item">
                                     <div>
