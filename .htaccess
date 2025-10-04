@@ -7,14 +7,15 @@
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /
 
-    # Redirect www to non-www
-    RewriteCond %{HTTP_HOST} ^www\.divscout\.app$ [NC]
+    # Redirect www to non-www (both HTTP and HTTPS)
+    RewriteCond %{HTTP_HOST} ^www\.divscout\.app$ [NC,OR]
+    RewriteCond %{HTTP_HOST} ^www\.divscout\.app:443$ [NC]
     RewriteRule ^(.*)$ https://divscout.app/$1 [R=301,L]
 
-    # Redirect HTTP to HTTPS (uncomment if needed)
+    # Redirect HTTP to HTTPS for non-www (uncomment if needed)
     # RewriteCond %{HTTPS} off
+    # RewriteCond %{HTTP_HOST} !^www\. [NC]
     # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </IfModule>
 
