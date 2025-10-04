@@ -692,12 +692,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Calendar filter
     document.getElementById('calendar-filter-btn').addEventListener('click', loadCalendar);
     
-    // Set default calendar dates (next 30 days)
+    // Set default calendar dates (last 90 days to next 30 days)
     const today = new Date();
+    const pastDate = new Date(today);
+    pastDate.setDate(today.getDate() - 90);
     const futureDate = new Date(today);
     futureDate.setDate(today.getDate() + 30);
-    
-    document.getElementById('calendar-start').valueAsDate = today;
+
+    document.getElementById('calendar-start').valueAsDate = pastDate;
     document.getElementById('calendar-end').valueAsDate = futureDate;
     
     // Modal close
