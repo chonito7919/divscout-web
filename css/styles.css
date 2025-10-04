@@ -721,17 +721,17 @@ tbody tr:hover
 }
 
 .footer-content {
-    display: flex;
-    justify-content: space-around;
-    align-items: flex-start;
-    gap: 4rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2rem;
     margin-bottom: 2rem;
-    width: 100%;
+    text-align: center;
 }
 
 .footer-section {
-    flex: 1 1 30%;
-    max-width: 350px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .footer-section h3 {
@@ -739,18 +739,22 @@ tbody tr:hover
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 1rem;
+    text-align: center;
 }
 
 .footer-section p {
     color: var(--text-secondary);
     font-size: 0.875rem;
     line-height: 1.6;
+    text-align: center;
 }
 
 .footer-links {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    align-items: center;
+    width: 100%;
 }
 
 .footer-links a {
@@ -759,6 +763,7 @@ tbody tr:hover
     font-size: 0.875rem;
     line-height: 1.5;
     transition: color 0.2s;
+    text-align: center;
 }
 
 .footer-links a:hover {
