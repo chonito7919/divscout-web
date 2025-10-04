@@ -101,7 +101,7 @@ def index():
 # Stats endpoint
 @app.route('/stats')
 @app.route('/api/stats')
-@cache_for(3600)
+@cache_for(300)  # 5 minutes
 def get_stats():
     """Get database statistics"""
     conn = None
@@ -158,7 +158,7 @@ def get_stats():
 # Companies endpoints
 @app.route('/companies')
 @app.route('/api/companies')
-@cache_for(3600)
+@cache_for(600)  # 10 minutes
 def get_companies():
     """Get all companies"""
     conn = None
@@ -212,7 +212,7 @@ def get_companies():
 # Company detail endpoints
 @app.route('/companies/<ticker>')
 @app.route('/api/companies/<ticker>')
-@cache_for(3600)
+@cache_for(1800)  # 30 minutes
 def get_company(ticker):
     """Get single company by ticker"""
     conn = None
@@ -273,7 +273,7 @@ def get_company(ticker):
 # Company dividends endpoints
 @app.route('/companies/<ticker>/dividends')
 @app.route('/api/companies/<ticker>/dividends')
-@cache_for(3600)
+@cache_for(1800)  # 30 minutes
 def get_company_dividends(ticker):
     """Get dividends for a company"""
     conn = None
