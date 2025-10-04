@@ -717,7 +717,7 @@ tbody tr:hover
     background: var(--bg-primary);
     border-top: 1px solid var(--border);
     margin-top: 4rem;
-    padding: 3rem 0 1rem;
+    padding: 3rem 2rem 1rem 2rem;
 }
 
 .footer-content {
