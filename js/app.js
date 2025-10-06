@@ -674,6 +674,69 @@ function loadPageFromURL()
     handleHashChange();
 }
 
+// Global Search
+let searchCompanies = [];
+
+async function initializeSearch() {
+    try {
+        const data = await apiCall('/companies');
+        if (data.success) {
+            searchCompanies = data.data;
+        }
+    } catch (error) {
+        console.error('Failed to load companies for search:', error);
+    }
+}
+
+function performSearch(query) {
+    if (!query || query.length < 1) {
+        hideSearchResults();
+        return;
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const results = searchCompanies.filter(company =>
+        company.ticker.toLowerCase().includes(lowerQuery) ||
+        company.company_name.toLowerCase().includes(lowerQuery)
+    ).slice(0, 10); // Limit to 10 results
+
+    displaySearchResults(results);
+}
+
+function displaySearchResults(results) {
+    const container = document.getElementById('search-results');
+
+    if (results.length === 0) {
+        container.innerHTML = '<div class="search-no-results">No companies found</div>';
+        container.classList.remove('hidden');
+        return;
+    }
+
+    const html = results.map(company => `
+        <div class="search-result-item" data-ticker="${company.ticker}">
+            <div class="search-result-ticker">${company.ticker}</div>
+            <div class="search-result-name">${company.company_name}</div>
+        </div>
+    `).join('');
+
+    container.innerHTML = html;
+    container.classList.remove('hidden');
+
+    // Add click handlers
+    container.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const ticker = item.dataset.ticker;
+            showCompanyModal(ticker);
+            hideSearchResults();
+            document.getElementById('global-search').value = '';
+        });
+    });
+}
+
+function hideSearchResults() {
+    document.getElementById('search-results').classList.add('hidden');
+}
+
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
     // Load page from URL hash on initial load
@@ -681,6 +744,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Listen for hash changes (back/forward buttons)
     window.addEventListener('hashchange', handleHashChange);
+
+    // Initialize search
+    initializeSearch();
+
+    // Global search
+    const searchInput = document.getElementById('global-search');
+    searchInput.addEventListener('input', (e) => {
+        performSearch(e.target.value);
+    });
+
+    // Hide search results when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.header-search')) {
+            hideSearchResults();
+        }
+    });
 
     // Navigation
     document.querySelectorAll('.nav-link').forEach(link => {
