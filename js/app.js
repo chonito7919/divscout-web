@@ -754,6 +754,20 @@ document.addEventListener('DOMContentLoaded', () => {
         performSearch(e.target.value);
     });
 
+    // Handle Enter key to open first result
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const firstResult = document.querySelector('.search-result-item');
+            if (firstResult) {
+                const ticker = firstResult.dataset.ticker;
+                showCompanyModal(ticker);
+                hideSearchResults();
+                searchInput.value = '';
+            }
+        }
+    });
+
     // Hide search results when clicking outside
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.header-search')) {
