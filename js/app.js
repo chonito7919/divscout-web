@@ -695,14 +695,33 @@ function performSearch(query) {
         return;
     }
 
-    const lowerQuery = query.toLowerCase();
+    const lowerQuery = query.toLowerCase().trim();
+
+    // Filter companies that match the search query
     const results = searchCompanies.filter(company =>
         company.ticker.toLowerCase().includes(lowerQuery) ||
         company.company_name.toLowerCase().includes(lowerQuery)
-    ).slice(0, 10); // Limit to 10 results
+    );
+
+    // Sort results: exact ticker matches first, then by ticker alphabetically
+    results.sort((a, b) => {
+        const aTickerMatch = a.ticker.toLowerCase() === lowerQuery;
+        const bTickerMatch = b.ticker.toLowerCase() === lowerQuery;
+
+        if (aTickerMatch && !bTickerMatch) return -1;
+        if (!aTickerMatch && bTickerMatch) return 1;
+
+        const aTickerStarts = a.ticker.toLowerCase().startsWith(lowerQuery);
+        const bTickerStarts = b.ticker.toLowerCase().startsWith(lowerQuery);
+
+        if (aTickerStarts && !bTickerStarts) return -1;
+        if (!aTickerStarts && bTickerStarts) return 1;
+
+        return a.ticker.localeCompare(b.ticker);
+    });
 
     selectedResultIndex = -1; // Reset selection
-    displaySearchResults(results);
+    displaySearchResults(results.slice(0, 10)); // Show top 10
 }
 
 function displaySearchResults(results) {

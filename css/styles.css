@@ -132,7 +132,7 @@ body
 
 .search-result-item:hover,
 .search-result-item.selected {
-    background: var(--bg-secondary);
+    background: var(--bg-tertiary);
 }
 
 .search-result-ticker {
