@@ -218,9 +218,9 @@ def get_company(ticker):
     conn = None
     try:
         conn = get_db_connection()
-        
+
         result = conn.run("""
-            SELECT 
+            SELECT
                 company_id,
                 ticker,
                 company_name,
@@ -228,17 +228,20 @@ def get_company(ticker):
                 sector,
                 industry,
                 market_cap_category,
-                is_active
+                is_active,
+                website,
+                description_source,
+                description
             FROM companies
             WHERE UPPER(ticker) = UPPER(:ticker)
         """, ticker=ticker)
-        
+
         if not result:
             return jsonify({
                 'success': False,
                 'error': 'Company not found'
             }), 404
-        
+
         row = result[0]
         company = {
             'company_id': row[0],
@@ -248,7 +251,10 @@ def get_company(ticker):
             'sector': row[4],
             'industry': row[5],
             'market_cap_category': row[6],
-            'is_active': row[7]
+            'is_active': row[7],
+            'website': row[8],
+            'wikipedia_url': row[9],
+            'wikipedia_description': row[10]
         }
         
         return jsonify({

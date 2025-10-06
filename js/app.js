@@ -210,7 +210,6 @@ function displayDividendsPage(page, limit) {
                     <th>Ticker</th>
                     <th>Company</th>
                     <th>Ex-Dividend Date</th>
-                    <th>Payment Date</th>
                     <th>Amount</th>
                     <th>Frequency</th>
                 </tr>
@@ -225,7 +224,6 @@ function displayDividendsPage(page, limit) {
                         </td>
                         <td>${div.company_name}</td>
                         <td>${formatDate(div.ex_dividend_date)}</td>
-                        <td>${formatDate(div.payment_date)}</td>
                         <td class="amount">${formatCurrency(div.amount)}</td>
                         <td>
                             <span class="badge ${getFrequencyBadgeClass(div.frequency)}">
@@ -423,107 +421,188 @@ function filterCompanies()
 }
 
 // Company Modal
-async function showCompanyModal(ticker) 
+let modalCurrentPage = 1;
+let modalPageSize = 20;
+let modalAllDividends = [];
+
+async function showCompanyModal(ticker)
 {
     const modal = document.getElementById('company-modal');
     const modalBody = document.getElementById('modal-body');
-    
+
     modal.classList.add('active');
     modalBody.innerHTML = '<div class="loading">Loading company data...</div>';
-    
-    try 
+
+    // Reset modal pagination
+    modalCurrentPage = 1;
+
+    try
     {
         // Load company info
         const companyData = await apiCall(`/companies/${ticker}`);
-        
-        if (!companyData.success) 
+
+        if (!companyData.success)
         {
             throw new Error('Company not found');
         }
-        
+
         const company = companyData.data;
-        
+
         // Load dividends
         const dividendsData = await apiCall(`/companies/${ticker}/dividends`);
-        const dividends = dividendsData.success ? dividendsData.data : [];
-        
-        // Calculate some basic stats
-        const totalDividends = dividends.length;
-        const totalAmount = dividends.reduce((sum, d) => sum + (d.amount || 0), 0);
-        const avgAmount = totalDividends > 0 ? totalAmount / totalDividends : 0;
-        
-        // Render modal content
-        const html = `
-            <div class="company-header">
-                <h2 class="company-title">${company.ticker} - ${company.company_name}</h2>
-                <div class="company-meta">
-                    <strong>CIK:</strong> ${company.cik || 'N/A'} | 
-                    <strong>Sector:</strong> ${company.sector || 'N/A'} | 
-                    <strong>Industry:</strong> ${company.industry || 'N/A'}
-                    ${company.market_cap_category ? ` | <strong>Market Cap:</strong> ${company.market_cap_category}` : ''}
-                </div>
-            </div>
-            
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Total Dividends</div>
-                    <div class="stat-value">${totalDividends}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Average Amount</div>
-                    <div class="stat-value">${formatCurrency(avgAmount)}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Last Payment</div>
-                    <div class="stat-value" style="font-size: 1.25rem;">
-                        ${dividends.length > 0 ? formatDate(dividends[0].payment_date) : 'N/A'}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="dividend-history">
-                <h3>Dividend History</h3>
-                ${dividends.length > 0 ? `
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Ex-Div Date</th>
-                                <th>Record Date</th>
-                                <th>Payment Date</th>
-                                <th>Amount</th>
-                                <th>Frequency</th>
-                                <th>Type</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${dividends.slice(0, 20).map(div => `
-                                <tr>
-                                    <td>${formatDate(div.ex_dividend_date)}</td>
-                                    <td>${formatDate(div.record_date)}</td>
-                                    <td>${formatDate(div.payment_date)}</td>
-                                    <td class="amount">${formatCurrency(div.amount)}</td>
-                                    <td>
-                                        <span class="badge ${getFrequencyBadgeClass(div.frequency)}">
-                                            ${div.frequency || 'N/A'}
-                                        </span>
-                                    </td>
-                                    <td>${div.dividend_type || 'cash'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                    ${dividends.length > 20 ? `<p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.875rem;">Showing 20 of ${dividends.length} dividends</p>` : ''}
-                ` : '<p class="calendar-hint">No dividend history available.</p>'}
-            </div>
-        `;
-        
-        modalBody.innerHTML = html;
-    } 
-    catch (error) 
+        modalAllDividends = dividendsData.success ? dividendsData.data : [];
+
+        renderCompanyModal(company);
+    }
+    catch (error)
     {
         showError('Failed to load company data: ' + error.message);
         modalBody.innerHTML = `<p class="calendar-hint">Error loading company data: ${error.message}</p>`;
     }
+}
+
+function renderCompanyModal(company) {
+    const modalBody = document.getElementById('modal-body');
+    const dividends = modalAllDividends;
+
+    // Calculate some basic stats
+    const totalDividends = dividends.length;
+    const totalAmount = dividends.reduce((sum, d) => sum + (d.amount || 0), 0);
+    const avgAmount = totalDividends > 0 ? totalAmount / totalDividends : 0;
+
+    // Pagination calculations
+    const totalPages = Math.ceil(totalDividends / modalPageSize);
+    const start = (modalCurrentPage - 1) * modalPageSize;
+    const end = start + modalPageSize;
+    const pageDividends = dividends.slice(start, end);
+
+    // Render modal content
+    const html = `
+        <div class="company-header">
+            <h2 class="company-title">${company.ticker} - ${company.company_name}</h2>
+            <div class="company-meta">
+                <strong>CIK:</strong> ${company.cik || 'N/A'} |
+                <strong>Sector:</strong> ${company.sector || 'N/A'} |
+                <strong>Industry:</strong> ${company.industry || 'N/A'}
+                ${company.market_cap_category ? ` | <strong>Market Cap:</strong> ${company.market_cap_category}` : ''}
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Dividends</div>
+                <div class="stat-value">${totalDividends}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Average Amount</div>
+                <div class="stat-value">${formatCurrency(avgAmount)}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Last Ex-Div Date</div>
+                <div class="stat-value" style="font-size: 1.25rem;">
+                    ${dividends.length > 0 ? formatDate(dividends[0].ex_dividend_date) : 'N/A'}
+                </div>
+            </div>
+        </div>
+
+        ${(company.wikipedia_description || company.website) ? `
+            <div class="company-info-section">
+                <div class="company-info-header">
+                    <h3>About ${company.company_name}</h3>
+                    ${company.website ? `
+                        <a href="${company.website}" target="_blank" rel="noopener noreferrer" class="company-website-link">
+                            🌐 Website
+                        </a>
+                    ` : ''}
+                </div>
+                ${company.wikipedia_description ? `
+                    <div class="company-info-content">
+                        <p>${company.wikipedia_description}</p>
+                        <div class="company-info-footer">
+                            <span class="wikipedia-attribution">
+                                Source: <a href="https://www.wikipedia.org/" target="_blank" rel="noopener noreferrer">Wikipedia</a>
+                                (<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 3.0</a>)
+                            </span>
+                            ${company.wikipedia_url ? `
+                                <a href="${company.wikipedia_url}" target="_blank" rel="noopener noreferrer" class="wikipedia-link">
+                                    Read full article →
+                                </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        ` : ''}
+
+        <div class="dividend-history">
+            <h3>Dividend History</h3>
+            ${dividends.length > 0 ? `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ex-Div Date</th>
+                            <th>Amount</th>
+                            <th>Frequency</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pageDividends.map(div => `
+                            <tr>
+                                <td>${formatDate(div.ex_dividend_date)}</td>
+                                <td class="amount">${formatCurrency(div.amount)}</td>
+                                <td>
+                                    <span class="badge ${getFrequencyBadgeClass(div.frequency)}">
+                                        ${div.frequency || 'N/A'}
+                                    </span>
+                                </td>
+                                <td>${div.dividend_type || 'cash'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ${totalPages > 1 ? `
+                    <div class="pagination" style="margin-top: 1rem;">
+                        <button
+                            class="btn btn-secondary"
+                            onclick="changeModalPage(${modalCurrentPage - 1})"
+                            ${modalCurrentPage === 1 ? 'disabled' : ''}
+                        >
+                            ← Previous
+                        </button>
+                        <span class="pagination-info">
+                            Showing ${start + 1}-${Math.min(end, totalDividends)} of ${totalDividends} | Page ${modalCurrentPage} of ${totalPages}
+                        </span>
+                        <button
+                            class="btn btn-secondary"
+                            onclick="changeModalPage(${modalCurrentPage + 1})"
+                            ${modalCurrentPage === totalPages ? 'disabled' : ''}
+                        >
+                            Next →
+                        </button>
+                    </div>
+                ` : ''}
+            ` : '<p class="calendar-hint">No dividend history available.</p>'}
+        </div>
+    `;
+
+    modalBody.innerHTML = html;
+}
+
+function changeModalPage(page) {
+    modalCurrentPage = page;
+    // Re-render with the same company data (stored in the modal)
+    const companyTitle = document.querySelector('.company-title').textContent;
+    const ticker = companyTitle.split(' - ')[0];
+    const company = {
+        ticker: ticker,
+        company_name: companyTitle.split(' - ')[1],
+        cik: document.querySelector('.company-meta').textContent.match(/CIK:\s*(\S+)/)?.[1] || 'N/A',
+        sector: document.querySelector('.company-meta').textContent.match(/Sector:\s*([^|]+)/)?.[1]?.trim() || 'N/A',
+        industry: document.querySelector('.company-meta').textContent.match(/Industry:\s*([^|]+)/)?.[1]?.trim() || 'N/A',
+        market_cap_category: document.querySelector('.company-meta').textContent.match(/Market Cap:\s*(.+)/)?.[1] || null
+    };
+    renderCompanyModal(company);
 }
 
 function closeModal() 
