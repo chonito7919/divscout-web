@@ -676,6 +676,7 @@ function loadPageFromURL()
 
 // Global Search
 let searchCompanies = [];
+let selectedResultIndex = -1;
 
 async function initializeSearch() {
     try {
@@ -700,6 +701,7 @@ function performSearch(query) {
         company.company_name.toLowerCase().includes(lowerQuery)
     ).slice(0, 10); // Limit to 10 results
 
+    selectedResultIndex = -1; // Reset selection
     displaySearchResults(results);
 }
 
@@ -735,6 +737,46 @@ function displaySearchResults(results) {
 
 function hideSearchResults() {
     document.getElementById('search-results').classList.add('hidden');
+    selectedResultIndex = -1;
+}
+
+function navigateResults(direction) {
+    const results = document.querySelectorAll('.search-result-item');
+    if (results.length === 0) return;
+
+    // Remove previous selection
+    if (selectedResultIndex >= 0 && selectedResultIndex < results.length) {
+        results[selectedResultIndex].classList.remove('selected');
+    }
+
+    // Update index
+    if (direction === 'down') {
+        selectedResultIndex = Math.min(selectedResultIndex + 1, results.length - 1);
+    } else if (direction === 'up') {
+        selectedResultIndex = Math.max(selectedResultIndex - 1, -1);
+    }
+
+    // Add new selection
+    if (selectedResultIndex >= 0) {
+        results[selectedResultIndex].classList.add('selected');
+        results[selectedResultIndex].scrollIntoView({ block: 'nearest' });
+    }
+}
+
+function openSelectedResult() {
+    const results = document.querySelectorAll('.search-result-item');
+    if (selectedResultIndex >= 0 && selectedResultIndex < results.length) {
+        const ticker = results[selectedResultIndex].dataset.ticker;
+        showCompanyModal(ticker);
+        hideSearchResults();
+        document.getElementById('global-search').value = '';
+    } else if (results.length > 0) {
+        // No selection, open first result
+        const ticker = results[0].dataset.ticker;
+        showCompanyModal(ticker);
+        hideSearchResults();
+        document.getElementById('global-search').value = '';
+    }
 }
 
 // Event Listeners
@@ -754,17 +796,19 @@ document.addEventListener('DOMContentLoaded', () => {
         performSearch(e.target.value);
     });
 
-    // Handle Enter key to open first result
+    // Handle keyboard navigation
     searchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'ArrowDown') {
             e.preventDefault();
-            const firstResult = document.querySelector('.search-result-item');
-            if (firstResult) {
-                const ticker = firstResult.dataset.ticker;
-                showCompanyModal(ticker);
-                hideSearchResults();
-                searchInput.value = '';
-            }
+            navigateResults('down');
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            navigateResults('up');
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            openSelectedResult();
+        } else if (e.key === 'Escape') {
+            hideSearchResults();
         }
     });
 

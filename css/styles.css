@@ -130,7 +130,8 @@ body
     border-bottom: none;
 }
 
-.search-result-item:hover {
+.search-result-item:hover,
+.search-result-item.selected {
     background: var(--bg-secondary);
 }
 
