@@ -9,6 +9,7 @@ import logging
 from flask import Flask, jsonify, request, make_response
 from functools import wraps
 from flask_cors import CORS
+from flask_caching import Cache
 import pg8000.native
 from dotenv import load_dotenv
 from datetime import datetime
@@ -30,6 +31,14 @@ except Exception as e:
 
 app = Flask(__name__)
 CORS(app)
+
+# Configure server-side caching (in-memory)
+cache_config = {
+    'CACHE_TYPE': 'SimpleCache',  # In-memory cache
+    'CACHE_DEFAULT_TIMEOUT': 300   # 5 minutes default
+}
+app.config.from_mapping(cache_config)
+cache = Cache(app)
 
 # Database configuration with defaults
 DB_CONFIG = {
@@ -71,8 +80,8 @@ def get_db_connection():
         raise
 
 
-def cache_for(seconds=300):
-    """Decorator to add cache headers to responses"""
+def add_cache_headers(seconds=300):
+    """Decorator to add browser cache headers to responses"""
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
@@ -101,7 +110,8 @@ def index():
 # Stats endpoint
 @app.route('/stats')
 @app.route('/api/stats')
-@cache_for(300)  # 5 minutes
+@cache.cached(timeout=300)  # Server-side cache: 5 minutes
+@add_cache_headers(300)     # Browser cache: 5 minutes
 def get_stats():
     """Get database statistics"""
     conn = None
@@ -158,7 +168,8 @@ def get_stats():
 # Companies endpoints
 @app.route('/companies')
 @app.route('/api/companies')
-@cache_for(600)  # 10 minutes
+@cache.cached(timeout=600)  # Server-side cache: 10 minutes
+@add_cache_headers(600)     # Browser cache: 10 minutes
 def get_companies():
     """Get all companies"""
     conn = None
@@ -212,7 +223,8 @@ def get_companies():
 # Company detail endpoints
 @app.route('/companies/<ticker>')
 @app.route('/api/companies/<ticker>')
-@cache_for(1800)  # 30 minutes
+@cache.cached(timeout=1800, query_string=True)  # Server-side cache: 30 minutes
+@add_cache_headers(1800)                        # Browser cache: 30 minutes
 def get_company(ticker):
     """Get single company by ticker"""
     conn = None
@@ -279,7 +291,8 @@ def get_company(ticker):
 # Company dividends endpoints
 @app.route('/companies/<ticker>/dividends')
 @app.route('/api/companies/<ticker>/dividends')
-@cache_for(1800)  # 30 minutes
+@cache.cached(timeout=1800, query_string=True)  # Server-side cache: 30 minutes
+@add_cache_headers(1800)                        # Browser cache: 30 minutes
 def get_company_dividends(ticker):
     """Get dividends for a company"""
     conn = None
@@ -359,7 +372,8 @@ def get_company_dividends(ticker):
 # Recent dividends endpoints
 @app.route('/dividends/recent')
 @app.route('/api/dividends/recent')
-@cache_for(300)
+@cache.cached(timeout=300, query_string=True)  # Server-side cache: 5 minutes
+@add_cache_headers(300)                        # Browser cache: 5 minutes
 def get_recent_dividends():
     """Get recent dividends across all companies"""
     conn = None
@@ -423,7 +437,8 @@ def get_recent_dividends():
 # Calendar endpoints
 @app.route('/dividends/calendar')
 @app.route('/api/dividends/calendar')
-@cache_for(3600)
+@cache.cached(timeout=3600, query_string=True)  # Server-side cache: 1 hour
+@add_cache_headers(3600)                        # Browser cache: 1 hour
 def get_dividend_calendar():
     """Get dividends within a date range"""
     conn = None

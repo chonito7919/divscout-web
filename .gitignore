@@ -57,6 +57,10 @@ temp/
 .pytest_cache/
 .coverage
 htmlcov/
+tests/node_modules/
+tests/playwright-report/
+tests/test-results/
+tests/package-lock.json
 
 # Documentation build
 docs/_build/

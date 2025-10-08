@@ -6,7 +6,7 @@ A clean, responsive web interface for viewing SEC dividend data parsed from XBRL
 
 DivScout displays dividend data for US publicly traded companies with high confidence scores (>= 0.8). The data is sourced from SEC XBRL filings and filtered to remove annual totals and low-confidence entries.
 
-**Current Coverage**: AAPL, JNJ, TGT (146 verified dividend records)
+**Current Coverage**: Over 400+ companies with thousands of verified dividend records
 
 ## Features
 
@@ -144,10 +144,10 @@ All endpoints return JSON with `success` boolean and `data` object.
 
 ## Known Limitations
 
-1. **Limited Coverage**: Currently only 3 companies (AAPL, JNJ, TGT)
-2. **Historical Data Only**: No forward-looking dividend predictions
-3. **Missing Dates**: Some declaration/payment dates unavailable in XBRL
-4. **No Real-time Updates**: Data updated via batch process
+1. **Historical Data Only**: No forward-looking dividend predictions
+2. **Missing Dates**: Some declaration/payment dates unavailable in XBRL
+3. **No Real-time Updates**: Data updated via batch process
+4. **Coverage**: Expanding database of US publicly traded companies
 
 ## Security Considerations
 
